@@ -5,13 +5,15 @@
 #include <unistd.h>
 #include <windows.h>
 
+#define EPSILON 1e-8
+
 typedef struct Vector3D {
     double i;
     double j;
     double k;
 } Vector3D;
 
-Vector3D Vector3DPrint(const Vector3D v) {
+void Vector3DPrint(const Vector3D v) {
     printf("[%f, %f, %f]", v.i, v.j, v.k);
 }
 
@@ -80,11 +82,11 @@ Vector3D Matrix3DVectorProduct (const Matrix3D M, const Vector3D v) {
 
 Matrix3D Matrix3DInverse (const Matrix3D M) {
     const double det = M.a*(M.e*M.i - M.f*M.h) - M.b*(M.d*M.i - M.f*M.g) + M.c*(M.d*M.h - M.e*M.g);
-
+    const double invdet = 1/det;
     return (Matrix3D) {
-        +(M.e*M.i - M.f*M.h)/det,   -(M.b*M.i - M.c*M.h)/det,  +(M.b*M.f - M.c*M.e)/det,
-        -(M.d*M.i - M.f*M.g)/det,   +(M.a*M.i - M.c*M.g)/det,  -(M.a*M.f - M.d*M.c)/det,
-        +(M.d*M.h - M.e*M.g)/det,   -(M.a*M.h - M.b*M.g)/det,  +(M.a*M.e - M.b*M.d)/det,
+        +(M.e*M.i - M.f*M.h)*invdet,   -(M.b*M.i - M.c*M.h)*invdet,  +(M.b*M.f - M.c*M.e)*invdet,
+        -(M.d*M.i - M.f*M.g)*invdet,   +(M.a*M.i - M.c*M.g)*invdet,  -(M.a*M.f - M.d*M.c)*invdet,
+        +(M.d*M.h - M.e*M.g)*invdet,   -(M.a*M.h - M.b*M.g)*invdet,  +(M.a*M.e - M.b*M.d)*invdet,
     };
 }
 
@@ -98,7 +100,7 @@ int TriangleRayIntersection(const Triangle triangle, const Vector3D start, const
     const Vector3D edge2 = Vector3DSubtraction(triangle.c, triangle.a);
     const Vector3D target = Vector3DSubtraction(start, triangle.a);
 
-    if(Vector3DDotProduct(Vector3DCrossProduct(edge1, edge2), direction) < DBL_EPSILON) return 0;
+    if(fabs(Vector3DDotProduct(Vector3DCrossProduct(edge1, edge2), direction)) < EPSILON) return 0;
 
 
     const Matrix3D mat = {
@@ -113,6 +115,21 @@ int TriangleRayIntersection(const Triangle triangle, const Vector3D start, const
     const double t = v.i;
     const double x = v.j;
     const double y = v.k;
+
+    // const Vector3D p = Vector3DCrossProduct(direction, edge2);
+    // const Vector3D q = Vector3DCrossProduct(target, edge1);
+    //
+    // const double det = Vector3DDotProduct(p, edge1);
+    //
+    // // culling is done here if we just check the raw value
+    // if(fabs(det) < DBL_EPSILON) return 0;
+    //
+    //
+    // const double invdet = 1/det;
+    //
+    // const double t = Vector3DDotProduct(q, edge2) * invdet;
+    // const double x = Vector3DDotProduct(p, target) * invdet;
+    // const double y = Vector3DDotProduct(q, direction) * invdet;
 
     if(poi != NULL) {
         *poi = Vector3DAddition(triangle.a, Vector3DAddition(
@@ -137,9 +154,15 @@ Vector3D TriangleNormal(const Triangle triangle) {
 
 // takes a double from -1 to 1 and outputs a char with that light level
 char LightnessToChar(const double l) {
-    const int x = (l/2 + 1) * 11.9;
-    if(x < 0) return '.';
-    if(x > 12) return '@';
+    const double brightness = (l/2 + 0.5);
+
+    const int x = brightness * 12;
+
+
+    if(x <= 0) return '.';
+    if(x >= 12) return '@';
+    // return '.';
+
     return ".,-~:;=!*#$@"[x];
 }
 
@@ -156,17 +179,18 @@ char TrianglesRasterize(const Triangle triangles[], size_t n, const Vector3D sta
         const int col = TriangleRayIntersection(triangle, start, direction, NULL, &z);
 
         if(col==0) continue;
-        if(z>minZ && minZ) continue;
+        if(z<minZ && minZ) continue;
 
         minZ = z;
         mini = i;
     }
 
 
-    Triangle t = triangles[mini];
-    Vector3D normal = TriangleNormal(t);
+    const Triangle t = triangles[mini];
+    const Vector3D normal = TriangleNormal(t);
 
     if (minZ == 0) return ' ';
+    // return '0'+mini;
     return LightnessToChar(Vector3DDotProduct(normal, light));
 }
 
@@ -230,7 +254,7 @@ int main(void) {
     const Triangle triangles[] = {triangle1, triangle2, triangle3, triangle4};
 
     while(1) {
-        char buffer[2 * HEIGHT * WIDTH];
+        char buffer[10 * HEIGHT * WIDTH];
         int i = 0;
         for (int y = HEIGHT/2; y >= -HEIGHT/2; --y) {
             for (int x = -WIDTH/2; x <= WIDTH/2; ++x) {
@@ -244,17 +268,49 @@ int main(void) {
                         Matrix3DVectorProduct(R, triangles[j].c),
                     };
                 }
+                const char c = TrianglesRasterize(rotated_triangles, 4, (Vector3D){0,0,-10}, (Vector3D){x/CAR,y,120});
+                // here incase you want to color code
+                //
+                // switch (c) {
+                //     case '0':
+                //         strcpy(&buffer[i], "\x1b[31m");
+                //         // printf("\x1b[31m");
+                //     break;
+                //     case '1':
+                //         strcpy(&buffer[i], "\x1b[32m");
+                //         // printf("\x1b[32m");
+                //     break;
+                //     case '2':
+                //         strcpy(&buffer[i], "\x1b[34m");
+                //         // printf("\x1b[34m");
+                //     break;
+                //     case '3':
+                //         strcpy(&buffer[i], "\x1b[0m");
+                //     // printf("\x1b[34m");
+                //     break;
+                //     default:
+                //         i -= 5;
+                //         // strcat("\x1b[0m", &buffer[i]);
+                //         // printf("\x1b[0m");
+                //     break;
 
-                const char c = TrianglesRasterize(rotated_triangles, 3, (Vector3D){0,0,-10}, (Vector3D){x/CAR,y,120});
+
+                // }
+
+                // printf("%c",c);
+
+                // i += 5;
                 buffer[i++] = c;
             }
+
+            // printf("\n");
             buffer[i++] = '\n';
         }
 
         // ClearScreen();
         fwrite(buffer,1,i,stdout);
-        sleep(0.1);
-        time += 0.005;
+        sleep(0.01);
+        time += 0.01;
     }
 
     return 0;
