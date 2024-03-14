@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <unistd.h>
+#include <conio.h>
+
+// --- VECTORS -----------------------------------------
 
 typedef struct Vector3D {
     double i;
@@ -43,6 +46,10 @@ Vector3D Vector3DNormalized(const Vector3D v) {
     if (Vector3DMagnitude(v) == 0) return v;
     return Vector3DScalarProduct(1 / Vector3DMagnitude(v), v);
 }
+
+
+
+// --- MATRICES -----------------------------------------
 
 typedef struct Matrix3D {
     double a, b, c;
@@ -87,6 +94,9 @@ Matrix3D Matrix3DInverse(const Matrix3D M) {
             +(M.d * M.h - M.e * M.g) * id, -(M.a * M.h - M.b * M.g) * id, +(M.a * M.e - M.b * M.d) * id,
     };
 }
+
+
+// --- TRIANGLES ----------------------------------------------
 
 typedef struct Triangle {
     Vector3D a, b, c;
@@ -183,41 +193,21 @@ char TrianglesRaster(const Triangle triangles[], size_t n, const Vector3D start,
     return LightnessToChar(l);
 }
 
+
+
+// --- PROGRAM ----------------------------------------
+
 #define HEIGHT 45
 #define WIDTH 80
 #define CAR 2.285714285714286
 
 int main(void) {
+
+    // --- SETUP ----------------------------
+
+    printf("\e[?25l"); // hide the cursor
     static double time = 0;
-
-//    const Vector3D A = {0.0,0.5,0.0};
-//    const Vector3D B = {0.58,-0.5,0.0};
-//    const Vector3D C = {-0.58,-0.50,0.0};
-//    const Vector3D D = {0.0,-0.167,1.054};
-//
-//    const Triangle triangle1 = {A, B, C};
-//    const Triangle triangle2 = {D, B, C};
-//    const Triangle triangle3 = {D, A, C};
-//    const Triangle triangle4 = {D, B, A};
-//    const Triangle triangles[] = {triangle1, triangle2, triangle3, triangle4};
-
-//    Triangle triangles[12] = {
-//            {{-0.5, -0.5, -0.5}, {0.5,  -0.5, -0.5}, {0.5,  0.5,  -0.5}},
-//            {{0.5,  0.5,  -0.5}, {-0.5, 0.5,  -0.5}, {-0.5, -0.5, -0.5}},
-//            {{-0.5, -0.5, 0.5},  {0.5,  -0.5, 0.5},  {0.5,  0.5,  0.5}},
-//            {{0.5,  0.5,  0.5},  {-0.5, 0.5,  0.5},  {-0.5, -0.5, 0.5}},
-//            {{-0.5, 0.5,  -0.5}, {0.5,  0.5,  -0.5}, {0.5,  0.5,  0.5}},
-//            {{0.5,  0.5,  0.5},  {-0.5, 0.5,  0.5},  {-0.5, 0.5,  -0.5}},
-//            {{-0.5, -0.5, -0.5}, {0.5,  -0.5, -0.5}, {0.5,  -0.5, 0.5}},
-//            {{0.5,  -0.5, 0.5},  {-0.5, -0.5, 0.5},  {-0.5, -0.5, -0.5}},
-//            {{-0.5, -0.5, -0.5}, {-0.5, -0.5, 0.5},  {-0.5, 0.5,  0.5}},
-//            {{-0.5, 0.5,  0.5},  {-0.5, 0.5,  -0.5}, {-0.5, -0.5, -0.5}},
-//            {{0.5,  -0.5, -0.5}, {0.5,  -0.5, 0.5},  {0.5,  0.5,  0.5}},
-//            {{0.5,  0.5,  0.5},  {0.5,  0.5,  -0.5}, {0.5,  -0.5, -0.5}}
-//    };
-
     const double phi = (1.0 + sqrt(5.0)) / 2.0;
-
     Vector3D vertices[] = {
             {0,    1,    phi},
             {0,    -1,   phi},
@@ -232,35 +222,111 @@ int main(void) {
             {1,    -phi, 0},
             {-1,   -phi, 0},
     };
-
     Triangle triangles[] = {
-            {vertices[0], vertices[8], vertices[4]},
-            {vertices[0], vertices[4], vertices[1]},
-            {vertices[4], vertices[10], vertices[1]},
-            {vertices[4], vertices[5], vertices[10]},
-            {vertices[5], vertices[4], vertices[8]},
-            {vertices[2], vertices[5], vertices[8]},
-            {vertices[2], vertices[8], vertices[9]},
-            {vertices[8], vertices[9], vertices[2]},
-            {vertices[9], vertices[8], vertices[0]},
-            {vertices[9], vertices[0], vertices[6]},
-            {vertices[6], vertices[0], vertices[1]},
-            {vertices[6], vertices[1], vertices[11]},
-            {vertices[11], vertices[1], vertices[10]},
+            {vertices[0],  vertices[8],  vertices[4]},
+            {vertices[0],  vertices[4],  vertices[1]},
+            {vertices[4],  vertices[10], vertices[1]},
+            {vertices[4],  vertices[5],  vertices[10]},
+            {vertices[5],  vertices[4],  vertices[8]},
+            {vertices[2],  vertices[5],  vertices[8]},
+            {vertices[2],  vertices[8],  vertices[9]},
+            {vertices[8],  vertices[9],  vertices[2]},
+            {vertices[9],  vertices[8],  vertices[0]},
+            {vertices[9],  vertices[0],  vertices[6]},
+            {vertices[6],  vertices[0],  vertices[1]},
+            {vertices[6],  vertices[1],  vertices[11]},
+            {vertices[11], vertices[1],  vertices[10]},
             {vertices[11], vertices[10], vertices[3]},
-            {vertices[3], vertices[10], vertices[5]},
-            {vertices[3], vertices[5], vertices[2]},
-            {vertices[3], vertices[2], vertices[7]},
-            {vertices[7], vertices[2], vertices[9]},
-            {vertices[7], vertices[9], vertices[6]},
-            {vertices[7], vertices[6], vertices[11]},
-            {vertices[7], vertices[11], vertices[3]},
+            {vertices[3],  vertices[10], vertices[5]},
+            {vertices[3],  vertices[5],  vertices[2]},
+            {vertices[3],  vertices[2],  vertices[7]},
+            {vertices[7],  vertices[2],  vertices[9]},
+            {vertices[7],  vertices[9],  vertices[6]},
+            {vertices[7],  vertices[6],  vertices[11]},
+            {vertices[7],  vertices[11], vertices[3]},
     };
 
+    Vector3D position = {0, 0, -40};
+    double yaw = 0;
+    double pitch = 0;
+    // archived polygons
+    //const Vector3D A = {0.0,0.5,0.0};
+    //const Vector3D B = {0.58,-0.5,0.0};
+    //const Vector3D C = {-0.58,-0.50,0.0};
+    //const Vector3D D = {0.0,-0.167,1.054};
+    //
+    //const Triangle triangle1 = {A, B, C};
+    //const Triangle triangle2 = {D, B, C};
+    //const Triangle triangle3 = {D, A, C};
+    //const Triangle triangle4 = {D, B, A};
+    //const Triangle triangles[] = {triangle1, triangle2, triangle3, triangle4};
+    //
+    //Triangle triangles[12] = {
+    //        {{-0.5, -0.5, -0.5}, {0.5,  -0.5, -0.5}, {0.5,  0.5,  -0.5}},
+    //        {{0.5,  0.5,  -0.5}, {-0.5, 0.5,  -0.5}, {-0.5, -0.5, -0.5}},
+    //        {{-0.5, -0.5, 0.5},  {0.5,  -0.5, 0.5},  {0.5,  0.5,  0.5}},
+    //        {{0.5,  0.5,  0.5},  {-0.5, 0.5,  0.5},  {-0.5, -0.5, 0.5}},
+    //        {{-0.5, 0.5,  -0.5}, {0.5,  0.5,  -0.5}, {0.5,  0.5,  0.5}},
+    //        {{0.5,  0.5,  0.5},  {-0.5, 0.5,  0.5},  {-0.5, 0.5,  -0.5}},
+    //        {{-0.5, -0.5, -0.5}, {0.5,  -0.5, -0.5}, {0.5,  -0.5, 0.5}},
+    //        {{0.5,  -0.5, 0.5},  {-0.5, -0.5, 0.5},  {-0.5, -0.5, -0.5}},
+    //        {{-0.5, -0.5, -0.5}, {-0.5, -0.5, 0.5},  {-0.5, 0.5,  0.5}},
+    //        {{-0.5, 0.5,  0.5},  {-0.5, 0.5,  -0.5}, {-0.5, -0.5, -0.5}},
+    //        {{0.5,  -0.5, -0.5}, {0.5,  -0.5, 0.5},  {0.5,  0.5,  0.5}},
+    //        {{0.5,  0.5,  0.5},  {0.5,  0.5,  -0.5}, {0.5,  -0.5, -0.5}}
+    //};
+
+    // --- MAIN LOOP ------------------------
+
     while (1) {
-        char buffer[(HEIGHT + 1) * (WIDTH + 2 + 1)];
+
+        // --- UPDATES ---------------------
+
+        if (kbhit()) { // INPUTS
+            const int c = getch();
+
+            switch (c) {
+                case 'w':
+                    position = Vector3DAddition(position, Matrix3DVectorProduct(
+                            Matrix3DRotation(0, yaw, pitch),(Vector3D){0,0, 0.8}));
+                    break;
+                case 's':
+                    position = Vector3DSubtraction(position, Matrix3DVectorProduct(
+                            Matrix3DRotation(0, yaw, pitch),(Vector3D){0,0, 0.8}));
+                    break;
+//                case 's':
+//                    position.k -= 0.1;
+//                    break;
+//                case 'd':
+//                    position.i += 0.1;
+//                    break;
+
+                case ',':
+                    yaw -= 0.01;
+                    break;
+                case 'l':
+                    pitch -= 0.01;
+                    break;
+                case '.':
+                    pitch += 0.01;
+                    break;
+                case '/':
+                    yaw += 0.01;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // --- DRAWING ---------------------
+
+        char buffer[(HEIGHT + 1 + 1) * (WIDTH + 2)];
+
+        strcpy(buffer, "               I Love Gaming \n\n");
+
         const Matrix3D R = Matrix3DRotation(0, time, time * 0.7);
-        int i = 0;
+        int i = 32;
 
         for (int y = HEIGHT / 2; y >= -HEIGHT / 2; --y) {
             for (int x = -WIDTH / 2; x <= WIDTH / 2; ++x) {
@@ -276,17 +342,22 @@ int main(void) {
                 }
 
                 const char c = TrianglesRaster(rotated_triangles, n,
-                                               (Vector3D) {0, 0, -40},
-                                               (Vector3D) {x / CAR, y, 350});
+                                               position,
+                                               Matrix3DVectorProduct(Matrix3DRotation(0, yaw, pitch),
+                                                                     (Vector3D) {x / CAR, y, 240})
+                );
                 buffer[i++] = c;
             }
-            buffer[i++] = '|';
             buffer[i++] = '\n';
         }
+
         fwrite(buffer, 1, i, stdout);
         usleep(16666);
         time += 0.1;
     }
 }
 
-// TODO: Add inputs into this
+//// TODO: Add inputs into this
+//getch()    Get a character from the keyboard (no need to press Enter).
+//getche()   Get a character from the keyboard and echo it.
+//kbhit()    Check to see if a key has been pressed.
